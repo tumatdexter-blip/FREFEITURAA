@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corrida para a Prefeitura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .bg-gold-gradient { background: linear-gradient(135deg, #d4af37 0%, #aa771c 100%); }
+        .text-gold { color: #d4af37; }
+        .border-gold { border-color: #d4af37; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #064e3b; }
+        ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-emerald-950 text-slate-100 min-h-screen flex flex-col selection:bg-gold selection:text-emerald-950">
+
+    <header class="bg-emerald-900 border-b border-gold/40 shadow-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gold-gradient p-3 rounded-2xl shadow-lg text-emerald-950 flex items-center justify-center font-black text-2xl">
+                    <i class="fa-solid fa-landmark-flag"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight text-gold uppercase drop-shadow">Corrida para a Prefeitura</h1>
+                    <p class="text-xs text-emerald-300 font-medium">Plataforma Oficial de Acompanhamento & Salas Online</p>
+                </div>
+            </div>
+            <!-- Navigation Tabs -->
+            <nav class="flex flex-wrap items-center justify-center gap-2 bg-emerald-950/80 p-1.5 rounded-xl border border-emerald-800" id="nav-tabs">
+                <button onclick="switchTab('salas')" id="btn-tab-salas" class="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all duration-200 bg-gold text-emerald-950 shadow flex items-center gap-2">
+                    <i class="fa-solid fa-users"></i> Salas Online
+                </button>
+                <button onclick="switchTab('placar')" id="btn-tab-placar" class="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all duration-200 text-emerald-300 hover:text-white hover:bg-emerald-800 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy"></i> Placar Local
+                </button>
+                <button onclick="switchTab('casas')" id="btn-tab-casas" class="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all duration-200 text-emerald-300 hover:text-white hover:bg-emerald-800 flex items-center gap-2">
+                    <i class="fa-solid fa-map"></i> Casas (1-152)
+                </button>
+                <button onclick="switchTab('calc')" id="btn-tab-calc" class="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all duration-200 text-emerald-300 hover:text-white hover:bg-emerald-800 flex items-center gap-2">
+                    <i class="fa-solid fa-calculator"></i> Calc 152
+                </button>
+                <button onclick="switchTab('formacoes')" id="btn-tab-formacoes" class="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all duration-200 text-emerald-300 hover:text-white hover:bg-emerald-800 flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap"></i> Formações
+                </button>
+                <button onclick="switchTab('regulamento')" id="btn-tab-regulamento" class="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all duration-200 text-emerald-300 hover:text-white hover:bg-emerald-800 flex items-center gap-2">
+                    <i class="fa-solid fa-book"></i> Regulamento
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+
+        <!-- TAB 1: SALAS ONLINE -->
+        <section id="tab-salas" class="tab-content space-y-6">
+            <div class="bg-emerald-900/60 border border-gold/30 rounded-2xl p-6 shadow-xl backdrop-blur">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-emerald-800 pb-4">
+                    <div>
+                        <h2 class="text-xl font-black text-gold flex items-center gap-2">
+                            <i class="fa-solid fa-network-wired"></i> Salas Online em Tempo Real
+                        </h2>
+                        <p class="text-sm text-emerald-300 mt-1">Crie ou entre em salas usando códigos automáticos e convide amigos instantaneamente.</p>
+                    </div>
+                    <div id="auth-status-badge" class="px-3 py-1 bg-emerald-950 border border-emerald-700 rounded-full text-xs font-semibold text-emerald-400 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400" id="auth-dot"></span>
+                        <span id="auth-text">Sistema Online Ativo</span>
+                    </div>
+                </div>
+
+                <!-- LOBBY VIEW -->
+                <div id="room-lobby-view" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Create Room -->
+                    <div class="bg-emerald-950/80 border border-emerald-800 rounded-xl p-6 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-gold mb-2"><i class="fa-solid fa-plus-circle"></i> Criar Nova Sala</h3>
+                            <p class="text-xs text-emerald-300 mb-4">Inicie uma mesa online com código exclusivo e QR Code gerados na hora.</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Seu Nome de Jogador</label>
+                                    <input type="text" id="create-player-name" placeholder="Ex: Prefeito Carlos" class="w-full bg-emerald-900 border border-emerald-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-gold">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Nome da Sala</label>
+                                    <input type="text" id="create-room-name" placeholder="Ex: Mesa dos Amigos" class="w-full bg-emerald-900 border border-emerald-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-gold">
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="createNewRoom()" class="mt-6 w-full bg-gold-gradient hover:opacity-90 text-emerald-950 font-black py-3 px-4 rounded-xl shadow-lg transition uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-play"></i> Criar Sala e Entrar
+                        </button>
+                    </div>
+
+                    <!-- Join Room -->
+                    <div class="bg-emerald-950/80 border border-emerald-800 rounded-xl p-6 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-gold mb-2"><i class="fa-solid fa-right-to-bracket"></i> Entrar em Sala Existente</h3>
+                            <p class="text-xs text-emerald-300 mb-4">Insira o código da sala (ex: PREF-A1B2) fornecido pelo criador da partida.</p>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Seu Nome de Jogador</label>
+                                    <input type="text" id="join-player-name" placeholder="Ex: Vereadora Ana" class="w-full bg-emerald-900 border border-emerald-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-gold">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Código da Sala (PREF-XXXX)</label>
+                                    <input type="text" id="join-room-code" placeholder="Ex: PREF-7F32" class="w-full bg-emerald-900 border border-emerald-700 rounded-lg px-4 py-2.5 text-sm text-white uppercase focus:outline-none focus:border-gold">
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="joinRoomByCode()" class="mt-6 w-full bg-emerald-700 hover:bg-emerald-600 text-white font-black py-3 px-4 rounded-xl shadow-lg transition uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-door-open"></i> Entrar na Sala
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ACTIVE ROOM VIEW (WITH QR CODE AND CODE INSIDE) -->
+                <div id="room-active-view" class="mt-6 hidden space-y-6">
+                    <div class="bg-emerald-950/90 border border-gold/40 rounded-xl p-6 flex flex-col lg:flex-row justify-between items-center gap-6">
+                        <div class="space-y-2 text-center lg:text-left">
+                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+                                <span class="bg-gold text-emerald-950 font-black text-sm px-3 py-1.5 rounded uppercase tracking-wider shadow" id="active-room-code-tag">PREF-XXXX</span>
+                                <h3 class="text-2xl font-black text-white" id="active-room-title">Nome da Sala</h3>
+                            </div>
+                            <p class="text-xs text-emerald-300">Conectado como <strong class="text-gold" id="current-user-display">Nome</strong></p>
+                            <div class="flex flex-wrap justify-center lg:justify-start gap-3 pt-2">
+                                <button onclick="copyInviteLink()" class="bg-emerald-800 hover:bg-emerald-700 text-emerald-200 text-xs font-bold px-4 py-2.5 rounded-lg border border-emerald-700 transition flex items-center gap-2">
+                                    <i class="fa-solid fa-share-nodes"></i> Copiar Link de Convite
+                                </button>
+                                <button onclick="leaveCurrentRoom()" class="bg-red-900/80 hover:bg-red-800 text-red-200 text-xs font-bold px-4 py-2.5 rounded-lg border border-red-700 transition flex items-center gap-2">
+                                    <i class="fa-solid fa-right-from-bracket"></i> Sair da Sala
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- QR Code Container -->
+                        <div class="bg-white p-3 rounded-xl shadow-xl flex flex-col items-center justify-center border-2 border-gold">
+                            <div id="qrcode-container" class="w-28 h-28 flex items-center justify-center"></div>
+                            <span class="text-[10px] font-bold text-emerald-950 uppercase mt-1">Escaneie para Entrar</span>
+                        </div>
+                    </div>
+
+                    <!-- Player Controller -->
+                    <div class="bg-emerald-950 border border-emerald-800 rounded-xl p-6">
+                        <h4 class="text-sm font-bold text-gold uppercase tracking-wider mb-4"><i class="fa-solid fa-sliders"></i> Gerenciar Meus Dados na Sala</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Casa Atual (1 - 152)</label>
+                                <input type="number" id="my-space" min="1" max="152" value="1" onchange="updateMyPlayerData()" class="w-full bg-emerald-900 border border-emerald-700 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-gold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Formação / Profissão</label>
+                                <select id="my-profession" onchange="updateMyPlayerData()" class="w-full bg-emerald-900 border border-emerald-700 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-gold">
+                                    <option value="Administração">Administração</option>
+                                    <option value="Arquitetura e Urbanismo">Arquitetura e Urbanismo</option>
+                                    <option value="Ciências Econômicas">Ciências Econômicas</option>
+                                    <option value="Direito">Direito</option>
+                                    <option value="Engenharia Civil">Engenharia Civil</option>
+                                    <option value="Gestão Pública">Gestão Pública</option>
+                                    <option value="Medicina">Medicina</option>
+                                    <option value="Pedagogia">Pedagogia</option>
+                                    <option value="Serviço Social">Serviço Social</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Cartões Verdes</label>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="adjustMyCards('green', -1)" class="bg-emerald-900 border border-emerald-700 px-3 py-2 rounded-lg text-white font-bold hover:bg-emerald-800">-</button>
+                                    <input type="number" id="my-green" min="0" value="0" onchange="updateMyPlayerData()" class="w-full text-center bg-emerald-900 border border-emerald-700 rounded-lg px-2 py-2 text-sm text-white font-bold focus:outline-none focus:border-gold">
+                                    <button onclick="adjustMyCards('green', 1)" class="bg-emerald-900 border border-emerald-700 px-3 py-2 rounded-lg text-white font-bold hover:bg-emerald-800">+</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Cartões Vermelhos</label>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="adjustMyCards('red', -1)" class="bg-emerald-900 border border-emerald-700 px-3 py-2 rounded-lg text-white font-bold hover:bg-emerald-800">-</button>
+                                    <input type="number" id="my-red" min="0" value="0" onchange="updateMyPlayerData()" class="w-full text-center bg-emerald-900 border border-emerald-700 rounded-lg px-2 py-2 text-sm text-white font-bold focus:outline-none focus:border-gold">
+                                    <button onclick="adjustMyCards('red', 1)" class="bg-emerald-900 border border-emerald-700 px-3 py-2 rounded-lg text-white font-bold hover:bg-emerald-800">+</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Saldo (R$)</label>
+                                <input type="number" id="my-balance" value="50000" step="1000" onchange="updateMyPlayerData()" class="w-full bg-emerald-900 border border-emerald-700 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-gold">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ranking Table -->
+                    <div class="bg-emerald-950 border border-emerald-800 rounded-xl p-6 shadow-xl">
+                        <h4 class="text-sm font-bold text-gold uppercase tracking-wider mb-4"><i class="fa-solid fa-trophy"></i> Ranking da Sala ao Vivo</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-emerald-900/80 text-emerald-300 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3 rounded-l-lg">Pos</th>
+                                        <th class="p-3">Jogador</th>
+                                        <th class="p-3">Casa Atual</th>
+                                        <th class="p-3">Formação</th>
+                                        <th class="p-3 text-center">Verdes</th>
+                                        <th class="p-3 text-center">Vermelhos</th>
+                                        <th class="p-3 text-right rounded-r-lg">Saldo (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="online-ranking-tbody" class="divide-y divide-emerald-900/50">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: PLACAR LOCAL -->
+        <section id="tab-placar" class="tab-content hidden space-y-6">
+            <div class="bg-emerald-900/60 border border-gold/30 rounded-2xl p-6 shadow-xl backdrop-blur">
+                <div class="flex justify-between items-center border-b border-emerald-800 pb-4">
+                    <h2 class="text-xl font-black text-gold flex items-center gap-2">
+                        <i class="fa-solid fa-users-rectangle"></i> Placar Local
+                    </h2>
+                    <button onclick="openAddPlayerModal()" class="bg-gold-gradient text-emerald-950 font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider shadow hover:opacity-90 transition flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i> Novo Jogador
+                    </button>
+                </div>
+                <div class="mt-6 overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-emerald-950 text-emerald-300 uppercase text-xs border border-emerald-800">
+                            <tr>
+                                <th class="p-3">Jogador</th>
+                                <th class="p-3">Formação</th>
+                                <th class="p-3">Casa</th>
+                                <th class="p-3 text-center">Verdes</th>
+                                <th class="p-3 text-center">Vermelhos</th>
+                                <th class="p-3 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="local-players-tbody" class="divide-y divide-emerald-900/40"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: CASAS DO TABULEIRO (1-152) -->
+        <section id="tab-casas" class="tab-content hidden space-y-6">
+            <div class="bg-emerald-900/60 border border-gold/30 rounded-2xl p-6 shadow-xl backdrop-blur">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-emerald-800 pb-4">
+                    <h2 class="text-xl font-black text-gold flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot"></i> Guia das Casas (1 a 152)
+                    </h2>
+                    <input type="text" id="search-casa" oninput="filterCasas()" placeholder="Buscar casa..." class="bg-emerald-950 border border-emerald-700 rounded-lg px-4 py-2 text-xs text-white focus:outline-none focus:border-gold w-full md:w-64">
+                </div>
+                <div id="casas-grid" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[650px] overflow-y-auto pr-2"></div>
+            </div>
+        </section>
+
+        <!-- TAB 4: CALCULADORA CASA 152 -->
+        <section id="tab-calc" class="tab-content hidden space-y-6">
+            <div class="bg-emerald-900/60 border border-gold/30 rounded-2xl p-6 shadow-xl backdrop-blur max-w-2xl mx-auto">
+                <h2 class="text-xl font-black text-gold flex items-center gap-2 border-b border-emerald-800 pb-4">
+                    <i class="fa-solid fa-calculator"></i> Calculadora Casa 152
+                </h2>
+                <div class="space-y-4 mt-4">
+                    <div>
+                        <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Cartões Verdes</label>
+                        <input type="number" id="calc-green" value="0" min="0" oninput="calculateScore()" class="w-full bg-emerald-950 border border-emerald-700 rounded-lg px-4 py-2.5 text-sm font-bold text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Cartões Vermelhos</label>
+                        <input type="number" id="calc-red" value="0" min="0" oninput="calculateScore()" class="w-full bg-emerald-950 border border-emerald-700 rounded-lg px-4 py-2.5 text-sm font-bold text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-emerald-300 uppercase mb-1">Saldo (R$)</label>
+                        <input type="number" id="calc-money" value="100000" min="0" step="1000" oninput="calculateScore()" class="w-full bg-emerald-950 border border-emerald-700 rounded-lg px-4 py-2.5 text-sm font-bold text-white">
+                    </div>
+                    <div class="bg-emerald-950 border border-gold/40 rounded-xl p-5 mt-6 text-center">
+                        <span class="text-xs text-emerald-400 font-bold uppercase tracking-wider">Pontuação Final</span>
+                        <div id="calc-result" class="text-3xl font-black text-gold mt-2">0 Pontos</div>
+                        <p id="calc-status" class="text-xs text-emerald-300 mt-1">Elegível</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: FORMAÇÕES -->
+        <section id="tab-formacoes" class="tab-content hidden space-y-6">
+            <div class="bg-emerald-900/60 border border-gold/30 rounded-2xl p-6 shadow-xl backdrop-blur">
+                <div class="flex justify-between items-center border-b border-emerald-800 pb-4">
+                    <h2 class="text-xl font-black text-gold flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap"></i> Formações & Salários
+                    </h2>
+                    <button onclick="toggleAllSalaries()" class="bg-emerald-800 hover:bg-emerald-700 text-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg border border-emerald-700 transition flex items-center gap-2">
+                        <i class="fa-solid fa-eye" id="eye-icon"></i> <span id="toggle-text">Revelar Salários</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6" id="professions-grid"></div>
+            </div>
+        </section>
+
+        <!-- TAB 6: REGULAMENTO -->
+        <section id="tab-regulamento" class="tab-content hidden space-y-6">
+            <div class="bg-emerald-900/60 border border-gold/30 rounded-2xl p-6 shadow-xl backdrop-blur space-y-4">
+                <h2 class="text-xl font-black text-gold flex items-center gap-2 border-b border-emerald-800 pb-4">
+                    <i class="fa-solid fa-book-open"></i> Regulamento Oficial
+                </h2>
+                <p class="text-sm text-emerald-200 leading-relaxed">O objetivo é chegar à Casa 152 cumprindo as diretrizes de governança, mantendo a saúde financeira e administrando os cartões verdes e vermelhos.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-emerald-950 border border-gold/50 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <h3 id="modal-title" class="text-lg font-bold text-gold mb-2">Aviso</h3>
+            <div id="modal-body" class="text-sm text-emerald-200 my-4">...</div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeModal()" class="bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LocalStorage Multi-device Synchronized Simulation Engine
+        let currentRoomId = null;
+        let myUid = 'user_' + Math.random().toString(36).substring(2, 7);
+        let syncInterval = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initStaticData();
+            checkUrlInvite();
+        });
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.className = "px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all duration-200 text-emerald-300 hover:text-white hover:bg-emerald-800 flex items-center gap-2";
+            });
+            document.getElementById('btn-tab-' + tabId).className = "px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all duration-200 bg-gold text-emerald-950 shadow flex items-center gap-2";
+        };
+
+        window.createNewRoom = function() {
+            const playerName = document.getElementById('create-player-name').value.trim();
+            const roomName = document.getElementById('create-room-name').value.trim();
+
+            if(!playerName) { showModal('Atenção', 'Insira o seu nome de jogador.'); return; }
+            if(!roomName) { showModal('Atenção', 'Insira o nome da sala.'); return; }
+
+            const code = 'PREF-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+            
+            const roomData = {
+                id: code,
+                name: roomName,
+                players: [{
+                    uid: myUid,
+                    name: playerName,
+                    space: 1,
+                    profession: 'Administração',
+                    greenCards: 0,
+                    redCards: 0,
+                    balance: 50000
+                }]
+            };
+
+            localStorage.setItem('room_' + code, JSON.stringify(roomData));
+            enterRoomSession(code, roomName, playerName);
+        };
+
+        window.joinRoomByCode = function(specificCode) {
+            const playerName = document.getElementById('join-player-name').value.trim();
+            const code = (specificCode || document.getElementById('join-room-code').value).trim().toUpperCase();
+
+            if(!playerName) { showModal('Atenção', 'Insira o seu nome de jogador.'); return; }
+            if(!code) { showModal('Atenção', 'Insira o código da sala.'); return; }
+
+            let roomRaw = localStorage.getItem('room_' + code);
+            if(!roomRaw) {
+                showModal('Erro', 'Sala não encontrada. Verifique o código digitado.');
+                return;
+            }
+
+            let roomData = JSON.parse(roomRaw);
+            let existingPlayer = roomData.players.find(p => p.uid === myUid);
+            if(!existingPlayer) {
+                roomData.players.push({
+                    uid: myUid,
+                    name: playerName,
+                    space: 1,
+                    profession: 'Administração',
+                    greenCards: 0,
+                    redCards: 0,
+                    balance: 50000
+                });
+                localStorage.setItem('room_' + code, JSON.stringify(roomData));
+            }
+
+            enterRoomSession(code, roomData.name, playerName);
+        };
+
+        function enterRoomSession(code, roomName, playerName) {
+            currentRoomId = code;
+            document.getElementById('room-lobby-view').classList.add('hidden');
+            document.getElementById('room-active-view').classList.remove('hidden');
+
+            document.getElementById('active-room-code-tag').innerText = code;
+            document.getElementById('active-room-title').innerText = roomName;
+            document.getElementById('current-user-display').innerText = playerName;
+
+            generateQRCode(code);
+            startSyncListener();
+        }
+
+        function generateQRCode(code) {
+            const container = document.getElementById('qrcode-container');
+            container.innerHTML = '';
+            try {
+                const inviteUrl = window.location.href.split('?')[0] + '?room=' + code;
+                const qr = qrcode(0, 'M');
+                qr.addData(inviteUrl);
+                qr.make();
+                container.innerHTML = qr.createSvgTag({cellSize: 3, margin: 0});
+            } catch(e) {
+                container.innerHTML = '<span class="text-xs text-emerald-950 font-bold">' + code + '</span>';
+            }
+        }
+
+        window.updateMyPlayerData = function() {
+            if(!currentRoomId) return;
+            let roomRaw = localStorage.getItem('room_' + currentRoomId);
+            if(!roomRaw) return;
+
+            let roomData = JSON.parse(roomRaw);
+            let p = roomData.players.find(x => x.uid === myUid);
+            if(p) {
+                p.space = parseInt(document.getElementById('my-space').value) || 1;
+                p.profession = document.getElementById('my-profession').value;
+                p.greenCards = parseInt(document.getElementById('my-green').value) || 0;
+                p.redCards = parseInt(document.getElementById('my-red').value) || 0;
+                p.balance = parseFloat(document.getElementById('my-balance').value) || 0;
+                localStorage.setItem('room_' + currentRoomId, JSON.stringify(roomData));
+            }
+        };
+
+        window.adjustMyCards = function(type, delta) {
+            if(type === 'green') {
+                const el = document.getElementById('my-green');
+                el.value = Math.max(0, parseInt(el.value || 0) + delta);
+            } else {
+                const el = document.getElementById('my-red');
+                el.value = Math.max(0, parseInt(el.value || 0) + delta);
+            }
+            updateMyPlayerData();
+        };
+
+        function startSyncListener() {
+            if(syncInterval) clearInterval(syncInterval);
+            syncInterval = setInterval(() => {
+                if(!currentRoomId) return;
+                let roomRaw = localStorage.getItem('room_' + currentRoomId);
+                if(!roomRaw) return;
+                let roomData = JSON.parse(roomRaw);
+                renderOnlineRanking(roomData.players);
+            }, 1000);
+        }
+
+        function renderOnlineRanking(players) {
+            const tbody = document.getElementById('online-ranking-tbody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            players.sort((a, b) => b.space - a.space || b.greenCards - a.greenCards);
+            players.forEach((p, idx) => {
+                const isMe = p.uid === myUid;
+                tbody.innerHTML += `
+                    <tr class="${isMe ? 'bg-gold/10 font-bold' : ''}">
+                        <td class="p-3 text-gold font-black">${idx + 1}º</td>
+                        <td class="p-3 text-white">${p.name} ${isMe ? '<span class="text-[10px] bg-gold text-emerald-950 px-1.5 py-0.5 rounded font-black">Você</span>' : ''}</td>
+                        <td class="p-3 text-emerald-200">Casa ${p.space}</td>
+                        <td class="p-3 text-emerald-300 text-xs">${p.profession}</td>
+                        <td class="p-3 text-center text-emerald-400 font-bold">${p.greenCards}</td>
+                        <td class="p-3 text-center text-red-400 font-bold">${p.redCards}</td>
+                        <td class="p-3 text-right font-mono text-gold">R$ ${(p.balance || 0).toLocaleString('pt-BR')}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.leaveCurrentRoom = function() {
+            if(syncInterval) clearInterval(syncInterval);
+            currentRoomId = null;
+            document.getElementById('room-active-view').classList.add('hidden');
+            document.getElementById('room-lobby-view').classList.remove('hidden');
+        };
+
+        window.copyInviteLink = function() {
+            const link = window.location.href.split('?')[0] + '?room=' + currentRoomId;
+            navigator.clipboard.writeText(link);
+            showModal('Link Copiado!', 'Link copiado para a área de transferência.');
+        };
+
+        function checkUrlInvite() {
+            const params = new URLSearchParams(window.location.search);
+            const roomParam = params.get('room');
+            if(roomParam) {
+                switchTab('salas');
+                document.getElementById('join-room-code').value = roomParam;
+                showModal('Convite Detectado', 'Você foi convidado para a sala <strong>' + roomParam + '</strong>. Insira seu nome e clique em Entrar na Sala.');
+            }
+        }
+
+        let allSalariesVisible = false;
+        window.toggleAllSalaries = function() {
+            allSalariesVisible = !allSalariesVisible;
+            document.getElementById('toggle-text').innerText = allSalariesVisible ? 'Ocultar Salários' : 'Revelar Salários';
+            document.getElementById('eye-icon').className = allSalariesVisible ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+            initStaticData();
+        };
+
+        function initStaticData() {
+            const casasGrid = document.getElementById('casas-grid');
+            if(casasGrid) {
+                let html = '';
+                for(let i=1; i<=152; i++) {
+                    html += `
+                        <div class="bg-emerald-950/80 border border-emerald-800 rounded-xl p-4 flex flex-col justify-between">
+                            <div>
+                                <span class="text-xs font-black text-gold bg-emerald-900 px-2 py-0.5 rounded border border-emerald-700">Casa ${i}</span>
+                                <p class="text-xs text-emerald-200 mt-2">${i === 1 ? 'Ponto de Partida: Registro e Início!' : i === 152 ? 'Chegada: Apuração dos Votos e Vitória!' : 'Evento oficial do percurso rumo à Prefeitura.'}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                casasGrid.innerHTML = html;
+            }
+
+            const profGrid = document.getElementById('professions-grid');
+            if(profGrid) {
+                const profs = [
+                    { name: 'Administração', salary: 'R$ 8.500' },
+                    { name: 'Arquitetura e Urbanismo', salary: 'R$ 9.000' },
+                    { name: 'Ciências Econômicas', salary: 'R$ 9.500' },
+                    { name: 'Direito', salary: 'R$ 10.000' },
+                    { name: 'Engenharia Civil', salary: 'R$ 9.200' },
+                    { name: 'Gestão Pública', salary: 'R$ 8.800' },
+                    { name: 'Medicina', salary: 'R$ 10.500' },
+                    { name: 'Pedagogia', salary: 'R$ 7.500' },
+                    { name: 'Serviço Social', salary: 'R$ 7.800' }
+                ];
+                let html = '';
+                profs.forEach(p => {
+                    const salDisplay = allSalariesVisible ? p.salary : '••••••••';
+                    html += `
+                        <div class="bg-emerald-950/80 border border-emerald-800 rounded-xl p-5 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-gold text-base">${p.name}</h3>
+                                <p class="text-xs text-emerald-300 mt-1">Salário: <strong class="text-white font-mono">${salDisplay}</strong></p>
+                            </div>
+                        </div>
+                    `;
+                });
+                profGrid.innerHTML = html;
+            }
+        }
+
+        window.calculateScore = function() {
+            const g = parseInt(document.getElementById('calc-green').value) || 0;
+            const r = parseInt(document.getElementById('calc-red').value) || 0;
+            const m = parseFloat(document.getElementById('calc-money').value) || 0;
+            const score = (g * 100) - (r * 150) + Math.floor(m / 1000);
+            document.getElementById('calc-result').innerText = score + ' Pontos';
+        };
+
+        window.showModal = function(title, body) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerHTML = body;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        };
+
+        window.closeModal = function() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        };
+    </script>
+</body>
+</html>
